@@ -79,7 +79,7 @@ const TaskApp: React.FC = () => {
       {/* ヘッダー */}
       <header className="bg-white border-b shadow-sm">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-gray-900">🗂️ タスク管理</h1>
+          <h1 className="text-xl font-bold text-gray-900">タスク管理</h1>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowCategoryManager((prev) => !prev)}
@@ -91,7 +91,7 @@ const TaskApp: React.FC = () => {
               onClick={handleOpenCreate}
               className="px-4 py-1.5 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
             >
-              ＋ 新規タスク
+              新規タスク
             </button>
           </div>
         </div>

@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react'
-import type { Task, TaskFormData, Category, Status, Priority } from '../types'
+import Select, { type StylesConfig, type SingleValue } from 'react-select'
+import DatePicker, { registerLocale } from 'react-datepicker'
+import { ja } from 'date-fns/locale'
+import { format, parseISO } from 'date-fns'
+import 'react-datepicker/dist/react-datepicker.css'
+import type { Task, TaskFormData, Category } from '../types'
+
+registerLocale('ja', ja)
 
 const INITIAL_FORM_DATA: TaskFormData = {
   title: '',
@@ -10,17 +17,37 @@ const INITIAL_FORM_DATA: TaskFormData = {
   category_id: '',
 }
 
-const STATUS_OPTIONS: { value: Status; label: string }[] = [
+type SelectOption = { value: string | number; label: string }
+
+const STATUS_OPTIONS: SelectOption[] = [
   { value: 'pending', label: '未着手' },
   { value: 'responding', label: '対応中' },
   { value: 'finish', label: '完了' },
 ]
 
-const PRIORITY_OPTIONS: { value: Priority; label: string }[] = [
+const PRIORITY_OPTIONS: SelectOption[] = [
   { value: 'low', label: '低' },
   { value: 'medium', label: '中' },
   { value: 'high', label: '高' },
 ]
+
+const selectStyles: StylesConfig<SelectOption, false> = {
+  control: (base) => ({
+    ...base,
+    minHeight: '38px',
+    fontSize: '14px',
+    borderColor: '#d1d5db',
+    boxShadow: 'none',
+    '&:hover': { borderColor: '#3b82f6' },
+  }),
+  option: (base, state) => ({
+    ...base,
+    fontSize: '14px',
+    backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#eff6ff' : 'white',
+    color: state.isSelected ? 'white' : '#374151',
+  }),
+  indicatorSeparator: () => ({ display: 'none' }),
+}
 
 interface TaskFormProps {
   task: Task | null
@@ -33,6 +60,11 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, categories, onSubmit, onClose
   const [formData, setFormData] = useState<TaskFormData>(INITIAL_FORM_DATA)
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
+
+  const categoryOptions: SelectOption[] = [
+    { value: '', label: 'なし' },
+    ...categories.map((cat) => ({ value: cat.id, label: cat.name })),
+  ]
 
   // 編集時は既存データをフォームにセット
   useEffect(() => {
@@ -50,15 +82,28 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, categories, onSubmit, onClose
     }
   }, [task])
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleSelectChange = (key: keyof TaskFormData) => (option: SingleValue<SelectOption>) => {
+    const raw = option?.value ?? ''
+    const value = key === 'category_id' && raw !== '' ? Number(raw) : raw
+    setFormData((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const handleDateChange = (date: Date | null) => {
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'category_id' && value !== '' ? Number(value) : value,
+      due_date: date ? format(date, 'yyyy-MM-dd') : '',
     }))
   }
+
+  const dueDateValue = formData.due_date ? parseISO(formData.due_date) : null
+
+  const findOption = (options: SelectOption[], value: string | number | '') =>
+    options.find((opt) => opt.value === value) ?? null
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -134,31 +179,25 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, categories, onSubmit, onClose
             {/* ステータス */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">ステータス</label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {STATUS_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
+              <Select
+                options={STATUS_OPTIONS}
+                value={findOption(STATUS_OPTIONS, formData.status)}
+                onChange={handleSelectChange('status')}
+                styles={selectStyles}
+                isSearchable={false}
+              />
             </div>
 
             {/* 優先度 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">優先度</label>
-              <select
-                name="priority"
-                value={formData.priority}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {PRIORITY_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
+              <Select
+                options={PRIORITY_OPTIONS}
+                value={findOption(PRIORITY_OPTIONS, formData.priority)}
+                onChange={handleSelectChange('priority')}
+                styles={selectStyles}
+                isSearchable={false}
+              />
             </div>
           </div>
 
@@ -166,28 +205,28 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, categories, onSubmit, onClose
             {/* カテゴリ */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">カテゴリ</label>
-              <select
-                name="category_id"
-                value={formData.category_id}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">なし</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
-                ))}
-              </select>
+              <Select
+                options={categoryOptions}
+                value={findOption(categoryOptions, formData.category_id)}
+                onChange={handleSelectChange('category_id')}
+                styles={selectStyles}
+                isSearchable={false}
+              />
             </div>
 
             {/* 期限日 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">期限日</label>
-              <input
-                type="date"
-                name="due_date"
-                value={formData.due_date}
-                onChange={handleChange}
+              <DatePicker
+                selected={dueDateValue}
+                onChange={handleDateChange}
+                locale="ja"
+                dateFormat="yyyy/MM/dd"
+                placeholderText="日付を選択"
+                isClearable
+                autoComplete="off"
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                wrapperClassName="w-full"
               />
             </div>
           </div>
@@ -216,3 +255,4 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, categories, onSubmit, onClose
 }
 
 export default TaskForm
+

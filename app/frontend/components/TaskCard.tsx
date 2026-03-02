@@ -58,14 +58,12 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete }) => {
           {/* メタ情報 */}
           <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
             {task.category && (
-              <span className="flex items-center gap-1">
-                <span>📁</span>
+              <span className="text-xs text-gray-500">
                 {task.category.name}
               </span>
             )}
             {task.due_date && (
-              <span className={`flex items-center gap-1 ${isOverdue ? 'text-red-600 font-medium' : ''}`}>
-                <span>📅</span>
+              <span className={`text-xs ${isOverdue ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
                 {task.due_date}
                 {isOverdue && ' (期限超過)'}
               </span>

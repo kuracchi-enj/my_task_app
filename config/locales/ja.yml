@@ -1,0 +1,25 @@
+ja:
+  activerecord:
+    errors:
+      format: "%{attribute}%{message}"
+      messages:
+        blank: "を入力してください"
+        taken: "はすでに使用されています"
+        too_long: "は%{count}文字以内で入力してください"
+        inclusion: "は一覧にありません"
+        invalid: "は不正な値です"
+    models:
+      task: "タスク"
+      category: "カテゴリ"
+    attributes:
+      task:
+        title: "タイトル"
+        description: "説明"
+        status: "ステータス"
+        priority: "優先度"
+        due_date: "期限日"
+        category: "カテゴリ"
+      category:
+        name: "カテゴリ名"
+  errors:
+    format: "%{attribute}%{message}"
