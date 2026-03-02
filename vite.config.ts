@@ -9,4 +9,8 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  server: {
+    // Docker内からのプロキシリクエストを許可
+    allowedHosts: true,
+  },
 })
