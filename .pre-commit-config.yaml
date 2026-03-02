@@ -1,0 +1,16 @@
+repos:
+  - repo: local
+    hooks:
+      - id: rubocop
+        name: RuboCop
+        language: system
+        entry: bundle exec rubocop --parallel
+        types: [ruby]
+        pass_filenames: false
+
+      - id: brakeman
+        name: Brakeman
+        language: system
+        entry: bundle exec brakeman --no-pager --quiet
+        types: [ruby]
+        pass_filenames: false
