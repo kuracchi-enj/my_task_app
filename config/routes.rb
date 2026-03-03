@@ -15,5 +15,9 @@ Rails.application.routes.draw do
     end
   end
 
+  # React Router (BrowserRouter) のフロントエンドルートをすべて Rails の root へフォールバック
+  get "/categories", to: "tasks#index"
+  get "/groups", to: "tasks#index"
+
   get "up" => "rails/health#show", as: :rails_health_check
 end

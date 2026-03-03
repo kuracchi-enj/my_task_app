@@ -4,7 +4,7 @@ import type { Task, FilterParams } from '../types'
 
 const TASKS_API_PATH = '/api/v1/tasks'
 
-export const useTasks = () => {
+export const useTasks = (initialFilters?: Partial<FilterParams>) => {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -38,7 +38,7 @@ export const useTasks = () => {
   }, [])
 
   useEffect(() => {
-    fetchTasks()
+    fetchTasks(initialFilters ?? {})
   }, [fetchTasks])
 
   return { tasks, loading, error, fetchTasks }
