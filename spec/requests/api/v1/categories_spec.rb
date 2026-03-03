@@ -3,6 +3,9 @@ require 'rails_helper'
 RSpec.describe 'Api::V1::Categories', type: :request do
   let(:headers) { { 'Content-Type' => 'application/json', 'Accept' => 'application/json' } }
   let!(:categories) { create_list(:category, 3) }
+  let(:user) { create(:user) }
+
+  before { sign_in(user) }
 
   describe 'GET /api/v1/categories' do
     it 'カテゴリ一覧を返す' do

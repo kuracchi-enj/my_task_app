@@ -6,6 +6,13 @@ export interface Category {
   name: string
 }
 
+export interface CurrentUser {
+  id: number
+  login_id: string
+  name: string
+  group_name: string | null
+}
+
 export interface Task {
   id: number
   title: string

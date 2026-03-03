@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_02_131147) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_03_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -19,6 +19,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_02_131147) do
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_categories_on_name", unique: true
+  end
+
+  create_table "groups", force: :cascade do |t|
+    t.string "name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_groups_on_name", unique: true
   end
 
   create_table "tasks", force: :cascade do |t|
@@ -33,5 +40,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_02_131147) do
     t.index ["category_id"], name: "index_tasks_on_category_id"
   end
 
+  create_table "users", force: :cascade do |t|
+    t.string "login_id", null: false
+    t.string "password_digest", null: false
+    t.string "name", null: false
+    t.bigint "group_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["login_id"], name: "index_users_on_login_id", unique: true
+    t.index ["group_id"], name: "index_users_on_group_id"
+  end
+
   add_foreign_key "tasks", "categories"
+  add_foreign_key "users", "groups"
 end

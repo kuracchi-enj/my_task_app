@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react'
 import { useTasks } from '../hooks/useTasks'
 import { useCategories } from '../hooks/useCategories'
+import { useCurrentUser } from '../hooks/useCurrentUser'
 import { api } from '../utils/api'
 import TaskFilter from './TaskFilter'
 import TaskList from './TaskList'
@@ -9,6 +10,7 @@ import CategoryManager from './CategoryManager'
 import type { Task, TaskFormData, FilterParams } from '../types'
 
 const TASKS_API_PATH = '/api/v1/tasks'
+const LOGOUT_PATH = '/logout'
 
 const INITIAL_FILTERS: FilterParams = {
   q: '',
@@ -25,6 +27,7 @@ const TaskApp: React.FC = () => {
 
   const { tasks, loading, error, fetchTasks } = useTasks()
   const { categories, fetchCategories } = useCategories()
+  const { currentUser } = useCurrentUser()
 
   const handleFilterChange = useCallback(
     (newFilters: FilterParams) => {
@@ -74,13 +77,43 @@ const TaskApp: React.FC = () => {
     }
   }
 
+  const handleLogout = async () => {
+    const form = document.createElement('form')
+    form.method = 'POST'
+    form.action = LOGOUT_PATH
+
+    const methodInput = document.createElement('input')
+    methodInput.type = 'hidden'
+    methodInput.name = '_method'
+    methodInput.value = 'DELETE'
+    form.appendChild(methodInput)
+
+    const csrfInput = document.createElement('input')
+    csrfInput.type = 'hidden'
+    csrfInput.name = 'authenticity_token'
+    csrfInput.value =
+      document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? ''
+    form.appendChild(csrfInput)
+
+    document.body.appendChild(form)
+    form.submit()
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* ヘッダー */}
       <header className="bg-white border-b shadow-sm">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-xl font-bold text-gray-900">タスク管理</h1>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            {currentUser && (
+              <span className="text-sm text-gray-600">
+                {currentUser.group_name && (
+                  <span className="mr-1 text-gray-400">{currentUser.group_name}</span>
+                )}
+                {currentUser.name}
+              </span>
+            )}
             <button
               onClick={() => setShowCategoryManager((prev) => !prev)}
               className="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
@@ -92,6 +125,12 @@ const TaskApp: React.FC = () => {
               className="px-4 py-1.5 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
             >
               新規タスク
+            </button>
+            <button
+              onClick={handleLogout}
+              className="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+            >
+              ログアウト
             </button>
           </div>
         </div>
