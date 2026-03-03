@@ -4,11 +4,12 @@ module Api
       before_action :set_task, only: [ :show, :update, :destroy ]
 
       def index
-        tasks = Task.includes(:category)
+        tasks = Task.includes(:category, :assignee, :created_by, :updated_by)
           .search_by_title(params[:q])
           .filter_by_status(params[:status])
           .filter_by_category(params[:category_id])
           .filter_by_priority(params[:priority])
+          .filter_by_assignee(params[:assignee_id])
           .order(created_at: :desc)
 
         render json: tasks.map { |task| task_json(task) }
@@ -20,6 +21,8 @@ module Api
 
       def create
         task = Task.new(task_params)
+        task.created_user_id = current_user.id
+        task.updated_user_id = current_user.id
 
         if task.save
           render json: task_json(task), status: :created
@@ -29,6 +32,8 @@ module Api
       end
 
       def update
+        @task.updated_user_id = current_user.id
+
         if @task.update(task_params)
           render json: task_json(@task)
         else
@@ -44,13 +49,13 @@ module Api
       private
 
       def set_task
-        @task = Task.includes(:category).find(params[:id])
+        @task = Task.includes(:category, :assignee, :created_by, :updated_by).find(params[:id])
       rescue ActiveRecord::RecordNotFound
         render_not_found
       end
 
       def task_params
-        params.require(:task).permit(:title, :description, :status, :priority, :due_date, :category_id)
+        params.require(:task).permit(:title, :description, :status, :priority, :due_date, :category_id, :assignee_id)
       end
 
       # タスクをJSON形式にシリアライズ
@@ -63,9 +68,18 @@ module Api
           priority: task.priority,
           due_date: task.due_date,
           category: task.category ? { id: task.category.id, name: task.category.name } : nil,
+          assignee: user_summary(task.assignee),
+          created_by: user_summary(task.created_by),
+          updated_by: user_summary(task.updated_by),
           created_at: task.created_at,
           updated_at: task.updated_at
         }
+      end
+
+      def user_summary(user)
+        return nil unless user
+
+        { id: user.id, name: user.name }
       end
     end
   end

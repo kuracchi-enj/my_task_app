@@ -6,11 +6,29 @@ export interface Category {
   name: string
 }
 
+export interface UserSummary {
+  id: number
+  name: string
+}
+
+export interface User {
+  id: number
+  login_id: string
+  name: string
+}
+
+export interface Group {
+  id: number
+  name: string
+  admin: boolean
+}
+
 export interface CurrentUser {
   id: number
   login_id: string
   name: string
   group_name: string | null
+  is_admin: boolean
 }
 
 export interface Task {
@@ -21,6 +39,9 @@ export interface Task {
   priority: Priority
   due_date: string | null
   category: Category | null
+  assignee: UserSummary | null
+  created_by: UserSummary | null
+  updated_by: UserSummary | null
   created_at: string
   updated_at: string
 }
@@ -32,6 +53,7 @@ export interface TaskFormData {
   priority: Priority
   due_date: string
   category_id: number | ''
+  assignee_id: number | ''
 }
 
 export interface FilterParams {
@@ -39,4 +61,5 @@ export interface FilterParams {
   status: Status | ''
   category_id: number | ''
   priority: Priority | ''
+  assignee_id: number | 'all'
 }

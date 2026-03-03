@@ -18,6 +18,10 @@ export const useTasks = () => {
     if (filters.status) params.set('status', filters.status)
     if (filters.category_id) params.set('category_id', String(filters.category_id))
     if (filters.priority) params.set('priority', filters.priority)
+    // 'all' の場合はパラメーターを送らず全件取得、数値の場合は特定担当者でフィルター
+    if (filters.assignee_id !== undefined && filters.assignee_id !== 'all') {
+      params.set('assignee_id', String(filters.assignee_id))
+    }
 
     const path = params.toString() ? `${TASKS_API_PATH}?${params}` : TASKS_API_PATH
 

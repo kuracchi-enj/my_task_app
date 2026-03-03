@@ -2,32 +2,59 @@ import React, { useState, useCallback } from 'react'
 import { useTasks } from '../hooks/useTasks'
 import { useCategories } from '../hooks/useCategories'
 import { useCurrentUser } from '../hooks/useCurrentUser'
+import useUsers from '../hooks/useUsers'
 import { api } from '../utils/api'
 import TaskFilter from './TaskFilter'
 import TaskList from './TaskList'
 import TaskForm from './TaskForm'
 import CategoryManager from './CategoryManager'
+import GroupManager from './GroupManager'
 import type { Task, TaskFormData, FilterParams } from '../types'
 
 const TASKS_API_PATH = '/api/v1/tasks'
 const LOGOUT_PATH = '/logout'
 
-const INITIAL_FILTERS: FilterParams = {
-  q: '',
-  status: '',
-  category_id: '',
-  priority: '',
-}
-
 const TaskApp: React.FC = () => {
-  const [filters, setFilters] = useState<FilterParams>(INITIAL_FILTERS)
+  const { currentUser } = useCurrentUser()
+  const { users } = useUsers()
+
+  const initialFilters = (): FilterParams => ({
+    q: '',
+    status: '',
+    category_id: '',
+    priority: '',
+    assignee_id: currentUser?.id ?? 'all',
+  })
+
+  const [filters, setFilters] = useState<FilterParams>(() => ({
+    q: '',
+    status: '',
+    category_id: '',
+    priority: '',
+    assignee_id: 'all',
+  }))
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [showCategoryManager, setShowCategoryManager] = useState(false)
+  const [showGroupManager, setShowGroupManager] = useState(false)
 
   const { tasks, loading, error, fetchTasks } = useTasks()
   const { categories, fetchCategories } = useCategories()
-  const { currentUser } = useCurrentUser()
+
+  // currentUser がロードされたらデフォルトフィルターを設定
+  React.useEffect(() => {
+    if (currentUser) {
+      const defaultFilters: FilterParams = {
+        q: '',
+        status: '',
+        category_id: '',
+        priority: '',
+        assignee_id: currentUser.id,
+      }
+      setFilters(defaultFilters)
+      fetchTasks(defaultFilters)
+    }
+  }, [currentUser?.id])
 
   const handleFilterChange = useCallback(
     (newFilters: FilterParams) => {
@@ -64,7 +91,6 @@ const TaskApp: React.FC = () => {
       throw new Error(data.errors?.join(', ') ?? '保存に失敗しました')
     }
 
-    // フォーム送信後にフィルターを維持したままリスト更新
     await fetchTasks(filters)
   }
 
@@ -114,8 +140,22 @@ const TaskApp: React.FC = () => {
                 {currentUser.name}
               </span>
             )}
+            {currentUser?.is_admin && (
+              <button
+                onClick={() => {
+                  setShowGroupManager((prev) => !prev)
+                  setShowCategoryManager(false)
+                }}
+                className="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                グループ管理
+              </button>
+            )}
             <button
-              onClick={() => setShowCategoryManager((prev) => !prev)}
+              onClick={() => {
+                setShowCategoryManager((prev) => !prev)
+                setShowGroupManager(false)
+              }}
               className="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
             >
               カテゴリ
@@ -140,11 +180,15 @@ const TaskApp: React.FC = () => {
         <div className="flex flex-col gap-6 lg:flex-row">
           {/* メインコンテンツ */}
           <div className="flex-1">
-            <TaskFilter
-              categories={categories}
-              filters={filters}
-              onFilterChange={handleFilterChange}
-            />
+            {currentUser && (
+              <TaskFilter
+                categories={categories}
+                users={users}
+                currentUser={currentUser}
+                filters={filters}
+                onFilterChange={handleFilterChange}
+              />
+            )}
             <div className="flex items-center justify-between mb-3">
               <p className="text-sm text-gray-500">{tasks.length} 件</p>
             </div>
@@ -157,7 +201,7 @@ const TaskApp: React.FC = () => {
             />
           </div>
 
-          {/* カテゴリ管理サイドパネル */}
+          {/* サイドパネル */}
           {showCategoryManager && (
             <div className="w-full lg:w-64 shrink-0">
               <CategoryManager
@@ -166,14 +210,21 @@ const TaskApp: React.FC = () => {
               />
             </div>
           )}
+          {showGroupManager && currentUser?.is_admin && (
+            <div className="w-full lg:w-64 shrink-0">
+              <GroupManager />
+            </div>
+          )}
         </div>
       </main>
 
       {/* タスクフォームモーダル */}
-      {isFormOpen && (
+      {isFormOpen && currentUser && (
         <TaskForm
           task={editingTask}
           categories={categories}
+          users={users}
+          currentUser={currentUser}
           onSubmit={handleSubmitTask}
           onClose={handleCloseForm}
         />

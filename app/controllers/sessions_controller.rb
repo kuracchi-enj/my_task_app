@@ -1,4 +1,5 @@
 class SessionsController < ApplicationController
+  layout "login"
   skip_before_action :require_login
 
   def new
@@ -10,10 +11,18 @@ class SessionsController < ApplicationController
 
     if user&.authenticate(params[:password])
       session[:user_id] = user.id
-      redirect_to root_path, notice: "ログインしました"
+      respond_to do |format|
+        format.html { redirect_to root_path, notice: "ログインしました" }
+        format.json { render json: { ok: true }, status: :ok }
+      end
     else
-      flash.now[:alert] = "ユーザーIDまたはパスワードが正しくありません"
-      render :new, status: :unprocessable_entity
+      respond_to do |format|
+        format.html do
+          flash.now[:alert] = "ユーザーIDまたはパスワードが正しくありません"
+          render :new, status: :unprocessable_entity
+        end
+        format.json { render json: { error: "ユーザーIDまたはパスワードが正しくありません" }, status: :unprocessable_entity }
+      end
     end
   end
 

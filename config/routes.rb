@@ -9,7 +9,9 @@ Rails.application.routes.draw do
     namespace :v1 do
       resources :tasks
       resources :categories, only: [ :index, :create, :update, :destroy ]
+      resources :groups, only: [ :index, :create, :update, :destroy ]
       get "me", to: "users#me"
+      get "users", to: "users#index"
     end
   end
 

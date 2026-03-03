@@ -4,18 +4,9 @@ import DatePicker, { registerLocale } from 'react-datepicker'
 import { ja } from 'date-fns/locale'
 import { format, parseISO } from 'date-fns'
 import 'react-datepicker/dist/react-datepicker.css'
-import type { Task, TaskFormData, Category } from '../types'
+import type { Task, TaskFormData, Category, CurrentUser, User } from '../types'
 
 registerLocale('ja', ja)
-
-const INITIAL_FORM_DATA: TaskFormData = {
-  title: '',
-  description: '',
-  status: 'pending',
-  priority: 'medium',
-  due_date: '',
-  category_id: '',
-}
 
 type SelectOption = { value: string | number; label: string }
 
@@ -52,18 +43,35 @@ const selectStyles: StylesConfig<SelectOption, false> = {
 interface TaskFormProps {
   task: Task | null
   categories: Category[]
+  users: User[]
+  currentUser: CurrentUser
   onSubmit: (data: TaskFormData) => Promise<void>
   onClose: () => void
 }
 
-const TaskForm: React.FC<TaskFormProps> = ({ task, categories, onSubmit, onClose }) => {
-  const [formData, setFormData] = useState<TaskFormData>(INITIAL_FORM_DATA)
+const TaskForm: React.FC<TaskFormProps> = ({ task, categories, users, currentUser, onSubmit, onClose }) => {
+  const initialFormData = (): TaskFormData => ({
+    title: '',
+    description: '',
+    status: 'pending',
+    priority: 'medium',
+    due_date: '',
+    category_id: '',
+    assignee_id: currentUser.id,
+  })
+
+  const [formData, setFormData] = useState<TaskFormData>(initialFormData)
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
 
   const categoryOptions: SelectOption[] = [
     { value: '', label: 'なし' },
     ...categories.map((cat) => ({ value: cat.id, label: cat.name })),
+  ]
+
+  const assigneeOptions: SelectOption[] = [
+    { value: '', label: '未割り当て' },
+    ...users.map((u) => ({ value: u.id, label: u.name })),
   ]
 
   // 編集時は既存データをフォームにセット
@@ -76,9 +84,10 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, categories, onSubmit, onClose
         priority: task.priority,
         due_date: task.due_date ?? '',
         category_id: task.category?.id ?? '',
+        assignee_id: task.assignee?.id ?? '',
       })
     } else {
-      setFormData(INITIAL_FORM_DATA)
+      setFormData(initialFormData())
     }
   }, [task])
 
@@ -89,7 +98,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, categories, onSubmit, onClose
 
   const handleSelectChange = (key: keyof TaskFormData) => (option: SingleValue<SelectOption>) => {
     const raw = option?.value ?? ''
-    const value = key === 'category_id' && raw !== '' ? Number(raw) : raw
+    const value = (key === 'category_id' || key === 'assignee_id') && raw !== '' ? Number(raw) : raw
     setFormData((prev) => ({ ...prev, [key]: value }))
   }
 
@@ -231,6 +240,18 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, categories, onSubmit, onClose
             </div>
           </div>
 
+          {/* 担当者 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">担当者</label>
+            <Select
+              options={assigneeOptions}
+              value={findOption(assigneeOptions, formData.assignee_id)}
+              onChange={handleSelectChange('assignee_id')}
+              styles={selectStyles}
+              isSearchable={false}
+            />
+          </div>
+
           {/* ボタン */}
           <div className="flex justify-end gap-3 pt-2 border-t">
             <button
@@ -255,4 +276,3 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, categories, onSubmit, onClose
 }
 
 export default TaskForm
-

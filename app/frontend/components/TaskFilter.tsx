@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import Select, { type StylesConfig, type SingleValue } from 'react-select'
-import type { FilterParams, Category } from '../types'
+import type { FilterParams, Category, CurrentUser, User } from '../types'
 
 type SelectOption = { value: string | number; label: string }
 
@@ -40,16 +40,23 @@ const selectStyles: StylesConfig<SelectOption, false> = {
 
 interface TaskFilterProps {
   categories: Category[]
+  users: User[]
+  currentUser: CurrentUser
   filters: FilterParams
   onFilterChange: (filters: FilterParams) => void
 }
 
-const TaskFilter: React.FC<TaskFilterProps> = ({ categories, filters, onFilterChange }) => {
+const TaskFilter: React.FC<TaskFilterProps> = ({ categories, users, currentUser, filters, onFilterChange }) => {
   const [inputValue, setInputValue] = useState(filters.q)
 
   const categoryOptions: SelectOption[] = [
     { value: '', label: 'すべてのカテゴリ' },
     ...categories.map((cat) => ({ value: cat.id, label: cat.name })),
+  ]
+
+  const assigneeOptions: SelectOption[] = [
+    { value: 'all', label: 'すべてのユーザー' },
+    ...users.map((u) => ({ value: u.id, label: u.name })),
   ]
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -59,13 +66,20 @@ const TaskFilter: React.FC<TaskFilterProps> = ({ categories, filters, onFilterCh
 
   const handleSelectChange = (key: keyof FilterParams) => (option: SingleValue<SelectOption>) => {
     const raw = option?.value ?? ''
-    const value = key === 'category_id' && raw !== '' ? Number(raw) : raw
+    let value: FilterParams[typeof key]
+    if (key === 'category_id') {
+      value = raw !== '' ? Number(raw) : ''
+    } else if (key === 'assignee_id') {
+      value = raw === 'all' ? 'all' : Number(raw)
+    } else {
+      value = raw as FilterParams[typeof key]
+    }
     onFilterChange({ ...filters, [key]: value })
   }
 
   const handleReset = () => {
     setInputValue('')
-    onFilterChange({ q: '', status: '', category_id: '', priority: '' })
+    onFilterChange({ q: '', status: '', category_id: '', priority: '', assignee_id: currentUser.id })
   }
 
   const findOption = (options: SelectOption[], value: string | number | '') =>
@@ -123,6 +137,15 @@ const TaskFilter: React.FC<TaskFilterProps> = ({ categories, filters, onFilterCh
               options={categoryOptions}
               value={findOption(categoryOptions, filters.category_id)}
               onChange={handleSelectChange('category_id')}
+              styles={selectStyles}
+              isSearchable={false}
+            />
+          </div>
+          <div className="w-48">
+            <Select
+              options={assigneeOptions}
+              value={findOption(assigneeOptions, filters.assignee_id)}
+              onChange={handleSelectChange('assignee_id')}
               styles={selectStyles}
               isSearchable={false}
             />

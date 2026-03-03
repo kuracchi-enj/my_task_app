@@ -62,12 +62,23 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete }) => {
                 {task.category.name}
               </span>
             )}
+            {task.assignee && (
+              <span className="text-xs text-gray-500">
+                担当: {task.assignee.name}
+              </span>
+            )}
             {task.due_date && (
               <span className={`text-xs ${isOverdue ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
                 {task.due_date}
                 {isOverdue && ' (期限超過)'}
               </span>
             )}
+          </div>
+
+          {/* 作成者・更新者 */}
+          <div className="mt-2 flex flex-wrap gap-3 text-xs text-gray-400">
+            {task.created_by && <span>作成: {task.created_by.name}</span>}
+            {task.updated_by && <span>更新: {task.updated_by.name}</span>}
           </div>
         </div>
 
