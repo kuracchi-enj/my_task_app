@@ -6,5 +6,7 @@ FactoryBot.define do
     priority { :medium }
     due_date { Date.today + 7 }
     category { nil }
+    association :created_by, factory: :user
+    association :updated_by, factory: :user
   end
 end
