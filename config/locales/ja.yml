@@ -3,6 +3,7 @@ ja:
     errors:
       format: "%{attribute}%{message}"
       messages:
+        record_invalid: "バリデーションに失敗しました: %{errors}"
         blank: "を入力してください"
         taken: "はすでに使用されています"
         too_long: "は%{count}文字以内で入力してください"

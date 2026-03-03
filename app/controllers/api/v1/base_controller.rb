@@ -6,6 +6,12 @@ module Api
 
       private
 
+      def require_admin
+        unless current_user&.group&.admin?
+          render json: { error: "Forbidden" }, status: :forbidden
+        end
+      end
+
       def render_not_found
         render json: { error: "Not Found" }, status: :not_found
       end

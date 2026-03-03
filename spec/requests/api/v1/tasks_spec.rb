@@ -4,6 +4,9 @@ RSpec.describe 'Api::V1::Tasks', type: :request do
   let(:headers) { { 'Content-Type' => 'application/json', 'Accept' => 'application/json' } }
   let(:category) { create(:category) }
   let(:tasks) { create_list(:task, 3) }
+  let(:user) { create(:user) }
+
+  before { sign_in(user) }
 
   describe 'GET /api/v1/tasks' do
     it 'タスク一覧を返す' do

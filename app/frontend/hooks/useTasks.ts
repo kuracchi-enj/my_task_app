@@ -4,7 +4,7 @@ import type { Task, FilterParams } from '../types'
 
 const TASKS_API_PATH = '/api/v1/tasks'
 
-export const useTasks = () => {
+export const useTasks = (initialFilters?: Partial<FilterParams>) => {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -18,6 +18,10 @@ export const useTasks = () => {
     if (filters.status) params.set('status', filters.status)
     if (filters.category_id) params.set('category_id', String(filters.category_id))
     if (filters.priority) params.set('priority', filters.priority)
+    // 'all' の場合はパラメーターを送らず全件取得、数値の場合は特定担当者でフィルター
+    if (filters.assignee_id !== undefined && filters.assignee_id !== 'all') {
+      params.set('assignee_id', String(filters.assignee_id))
+    }
 
     const path = params.toString() ? `${TASKS_API_PATH}?${params}` : TASKS_API_PATH
 
@@ -34,7 +38,7 @@ export const useTasks = () => {
   }, [])
 
   useEffect(() => {
-    fetchTasks()
+    fetchTasks(initialFilters ?? {})
   }, [fetchTasks])
 
   return { tasks, loading, error, fetchTasks }
