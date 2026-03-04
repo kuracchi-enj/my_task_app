@@ -1,8 +1,8 @@
 module Api
   module V1
     class BaseController < ApplicationController
-      # CSRFトークン検証をJSON APIリクエストでも有効にする
-      protect_from_forgery with: :exception
+      # JSON APIではセッションを使わないため、CSRFトークン不正時はセッションをクリアする
+      protect_from_forgery with: :null_session
 
       private
 
