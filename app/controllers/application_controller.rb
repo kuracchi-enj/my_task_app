@@ -17,6 +17,8 @@ class ApplicationController < ActionController::Base
   helper_method :logged_in?
 
   def require_login
+    return if defined?(MCP_INTERNAL_TOKEN) && request.headers["X-Mcp-Internal-Token"] == MCP_INTERNAL_TOKEN
+
     unless logged_in?
       redirect_to login_path, alert: "ログインしてください"
     end
