@@ -2,7 +2,10 @@ class ApplicationController < ActionController::Base
   # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
   allow_browser versions: :modern
 
+  include MonkeyMcp::ControllerHelpers
+
   before_action :require_login
+  protect_with_internal_token! :require_login
 
   private
 
@@ -17,8 +20,6 @@ class ApplicationController < ActionController::Base
   helper_method :logged_in?
 
   def require_login
-    return if request.headers["X-Mcp-Internal-Token"] == MonkeyMcp.configuration.internal_token
-
     unless logged_in?
       redirect_to login_path, alert: "ログインしてください"
     end
