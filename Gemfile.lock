@@ -1,3 +1,12 @@
+PATH
+  remote: ../monkey_mcp
+  specs:
+    monkey_mcp (0.1.0)
+      actionpack (>= 7.0)
+      activerecord (>= 7.0)
+      rack (>= 2.0)
+      railties (>= 7.0)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -449,6 +458,7 @@ DEPENDENCIES
   image_processing (~> 1.2)
   jbuilder
   kamal
+  monkey_mcp!
   pg (~> 1.1)
   pre-commit
   propshaft
